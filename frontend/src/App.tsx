@@ -3,7 +3,6 @@ import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
 import { ToastProvider } from './components/ToastNotification'
 import Landing from './pages/Landing'
 import ExtraDataForm from './pages/ExtraDataForm'
-import OTPVerification from './pages/OTPVerification'
 import Dashboard from './pages/Dashboard'
 import ResumeAnalyzer from './pages/ResumeAnalyzer'
 import InterviewSimulator from './pages/InterviewSimulator'
@@ -34,19 +33,7 @@ function App() {
             }
           />
 
-          <Route
-            path="/verify-otp"
-            element={
-              <>
-                <SignedIn>
-                  <OTPVerification />
-                </SignedIn>
-                <SignedOut>
-                  <RedirectToSignIn />
-                </SignedOut>
-              </>
-            }
-          />
+
 
           <Route
             path="/dashboard"

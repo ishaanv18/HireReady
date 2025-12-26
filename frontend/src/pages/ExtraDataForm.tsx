@@ -29,9 +29,9 @@ export default function ExtraDataForm() {
             })
 
             if (response.data.success) {
-                // Store user ID for OTP verification
+                // Registration successful
                 localStorage.setItem('userId', response.data.data.id)
-                navigate('/verify-otp')
+                navigate('/dashboard')
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Registration failed')
