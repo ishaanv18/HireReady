@@ -138,12 +138,19 @@ public class AIService {
             }
 
             String responseBody = response.body().string();
+            log.debug("Groq API response: {}", responseBody);
+
             JsonObject jsonResponse = gson.fromJson(responseBody, JsonObject.class);
 
-            return jsonResponse.getAsJsonArray("choices")
-                    .get(0).getAsJsonObject()
-                    .getAsJsonObject("message")
-                    .get("content").getAsString();
+            // Extract content from response
+            if (jsonResponse.has("choices") && jsonResponse.getAsJsonArray("choices").size() > 0) {
+                JsonObject firstChoice = jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject();
+                if (firstChoice.has("message")) {
+                    return firstChoice.getAsJsonObject("message").get("content").getAsString();
+                }
+            }
+
+            throw new IOException("Unexpected Groq API response format");
         }
     }
 
