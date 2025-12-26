@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: hireready-backend
+    name: hireready_backend
     runtime: docker
     plan: free
     dockerfilePath: ./backend/Dockerfile
