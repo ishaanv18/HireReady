@@ -90,8 +90,7 @@ export default function ResumeUpload({ company, position, roundType, onNext, onB
             setAnalyzing(true)
 
             // Analyze resume
-            const analyzeResponse = await axios.post(`http://localhost:8080/api/resume/analyze/${resumeId}`)
-            const resumeText = analyzeResponse.data.data.extractedText || ''
+            await axios.post(`http://localhost:8080/api/resume/analyze/${resumeId}`)
 
             setAnalyzing(false)
 
