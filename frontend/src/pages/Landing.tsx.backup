@@ -1,0 +1,254 @@
+import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import {
+    FileText,
+    MessageCircle,
+    TrendingUp,
+    Award,
+    Target,
+    Zap,
+    ArrowRight
+} from 'lucide-react'
+import { dashboardAPI } from '../services/api'
+import Sidebar from '../components/Sidebar'
+import Card from '../components/Card'
+
+export default function Dashboard() {
+    const { user } = useUser()
+    const navigate = useNavigate()
+    const [metrics, setMetrics] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [isCollapsed, setIsCollapsed] = useState(false)
+
+    useEffect(() => {
+        loadDashboard()
+    }, [])
+
+    const loadDashboard = async () => {
+        try {
+            const userId = localStorage.getItem('userId')
+            if (!userId) {
+                navigate('/register-extra-data')
+                return
+            }
+
+            const response = await dashboardAPI.getMetrics(userId)
+            setMetrics(response.data.data)
+        } catch (err) {
+            console.error('Failed to load dashboard:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const quickActions = [
+        {
+            icon: FileText,
+            title: 'Analyze Resume',
+            description: 'Upload your resume for AI-powered analysis',
+            path: '/resume',
+            color: 'from-blue-500 to-purple-600',
+            badge: 'ATS Scoring'
+        },
+        {
+            icon: MessageCircle,
+            title: 'Start Interview',
+            description: 'Practice with AI interviewer',
+            path: '/interview',
+            color: 'from-green-500 to-purple-600',
+            badge: 'Adaptive AI'
+        }
+    ]
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-purple-50">
+                <div className="text-2xl font-semibold text-purple-600">Loading...</div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex">
+            <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+
+            <div
+                className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-[280px]'
+                    }`}
+            >
+                <div className="p-8">
+                    {/* Header */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8"
+                    >
+                        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                            Welcome back, <span className="bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">{metrics?.username || user?.firstName}!</span> 👋
+                        </h1>
+                        <p className="text-gray-600">Here's your interview preparation progress</p>
+                    </motion.div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                        >
+                            <Card variant="purple" className="p-6 group hover:scale-105 transition-transform cursor-pointer">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <Award className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="text-xs font-medium text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                                        Overall
+                                    </div>
+                                </div>
+                                <h3 className="text-sm text-gray-600 mb-2">Profile Score</h3>
+                                <div className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                                    {metrics?.profileScore?.toFixed(1) || '0.0'}%
+                                </div>
+                            </Card>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <Card variant="purple" className="p-6 group hover:scale-105 transition-transform cursor-pointer">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <FileText className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="text-xs font-medium text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                                        Resume
+                                    </div>
+                                </div>
+                                <h3 className="text-sm text-gray-600 mb-2">ATS Score</h3>
+                                <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                                    {metrics?.atsScore?.toFixed(1) || '0.0'}%
+                                </div>
+                            </Card>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                        >
+                            <Card variant="purple" className="p-6 group hover:scale-105 transition-transform cursor-pointer">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <Target className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="text-xs font-medium text-pink-600 bg-pink-100 px-3 py-1 rounded-full">
+                                        Interview
+                                    </div>
+                                </div>
+                                <h3 className="text-sm text-gray-600 mb-2">Interview Readiness</h3>
+                                <div className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">
+                                    {metrics?.interviewReadiness?.toFixed(1) || '0.0'}%
+                                </div>
+                            </Card>
+                        </motion.div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="mb-8"
+                    >
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {quickActions.map((action, index) => {
+                                const Icon = action.icon
+                                return (
+                                    <div
+                                        key={index}
+                                        onClick={() => navigate(action.path)}
+                                        className="cursor-pointer"
+                                    >
+                                        <Card variant="purple" className="p-8 group hover:scale-105 transition-all overflow-hidden relative">
+                                            <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+
+                                            <div className="relative z-10">
+                                                <div className="flex items-start justify-between mb-6">
+                                                    <div className={`w-14 h-14 bg-gradient-to-r ${action.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                                        <Icon className="w-7 h-7 text-white" />
+                                                    </div>
+                                                    <div className="text-xs font-medium text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
+                                                        {action.badge}
+                                                    </div>
+                                                </div>
+
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors">
+                                                    {action.title}
+                                                </h3>
+
+                                                <p className="text-gray-600 mb-4">
+                                                    {action.description}
+                                                </p>
+
+                                                <div className="flex items-center text-purple-600 font-medium group-hover:text-purple-700 transition-colors">
+                                                    <span>Get Started</span>
+                                                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </motion.div>
+
+                    {/* Progress Stats */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                    >
+                        <Card variant="purple" className="p-8">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Progress</h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <MessageCircle className="w-8 h-8 text-purple-600" />
+                                    </div>
+                                    <p className="text-gray-600 text-sm mb-1">Total Interviews</p>
+                                    <p className="text-3xl font-bold text-gray-900">{metrics?.totalInterviews || 0}</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <TrendingUp className="w-8 h-8 text-green-600" />
+                                    </div>
+                                    <p className="text-gray-600 text-sm mb-1">Completed</p>
+                                    <p className="text-3xl font-bold text-gray-900">{metrics?.completedInterviews || 0}</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <Zap className="w-8 h-8 text-orange-600" />
+                                    </div>
+                                    <p className="text-gray-600 text-sm mb-1">Confidence</p>
+                                    <p className="text-3xl font-bold text-gray-900">{metrics?.confidenceIndex?.toFixed(1) || '0.0'}</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <FileText className="w-8 h-8 text-pink-600" />
+                                    </div>
+                                    <p className="text-gray-600 text-sm mb-1">Resume</p>
+                                    <p className="text-3xl font-bold text-gray-900">{metrics?.hasResume ? 'Yes ✓' : 'No'}</p>
+                                </div>
+                            </div>
+                        </Card>
+                    </motion.div>
+                </div>
+            </div>
+        </div>
+    )
+}

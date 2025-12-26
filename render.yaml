@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: hireready-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://your-frontend.vercel.app
+      - key: PORT
+        value: 8080
+      - key: TESSERACT_PATH
+        value: /usr/bin/tesseract
+    healthCheckPath: /api/health
