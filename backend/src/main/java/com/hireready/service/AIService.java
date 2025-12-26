@@ -44,19 +44,20 @@ public class AIService {
     }
 
     /**
-     * Generate AI response with automatic fallback from Gemini to Groq
+     * Generate AI response with automatic fallback from Groq to Gemini
      */
     public String generateResponse(String prompt) {
         try {
-            log.info("Attempting to generate response using Gemini API");
-            return callGeminiAPI(prompt);
+            log.info("Attempting to generate response using Groq API");
+            return callGroqAPI(prompt);
         } catch (Exception e) {
-            log.warn("Gemini API failed, falling back to Groq: {}", e.getMessage());
+            log.warn("Groq API failed, falling back to Gemini: {}", e.getMessage());
             try {
-                return callGroqAPI(prompt);
-            } catch (Exception groqException) {
-                log.error("Both Gemini and Groq APIs failed", groqException);
-                throw new AIServiceException("All AI services are currently unavailable", groqException);
+                log.info("Attempting to generate response using Gemini API");
+                return callGeminiAPI(prompt);
+            } catch (Exception geminiException) {
+                log.error("Both Groq and Gemini APIs failed", geminiException);
+                throw new AIServiceException("All AI services are currently unavailable", geminiException);
             }
         }
     }
