@@ -2,7 +2,6 @@ package com.hireready.service;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.reflect.TypeToken;
 import com.hireready.model.InterviewSchedule;
 import com.hireready.repository.InterviewScheduleRepository;
 import lombok.extern.slf4j.Slf4j;

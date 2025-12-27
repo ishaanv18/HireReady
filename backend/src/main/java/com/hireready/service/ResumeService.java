@@ -99,8 +99,7 @@ public class ResumeService {
 
             // Set parsed data with error handling
             try {
-                resume.setSkills(gson.fromJson(parsedData.get("skills"), new TypeToken<List<String>>() {
-                }.getType()));
+                resume.setSkills(parseStringList(parsedData.get("skills")));
             } catch (Exception e) {
                 log.warn("Failed to parse skills, using empty list", e);
                 resume.setSkills(List.of());
@@ -124,8 +123,7 @@ public class ResumeService {
             }
 
             try {
-                resume.setAchievements(gson.fromJson(parsedData.get("achievements"), new TypeToken<List<String>>() {
-                }.getType()));
+                resume.setAchievements(parseStringList(parsedData.get("achievements")));
             } catch (Exception e) {
                 log.warn("Failed to parse achievements, using empty list", e);
                 resume.setAchievements(List.of());
@@ -158,33 +156,28 @@ public class ResumeService {
             }
 
             try {
-                resume.setWeaknesses(gson.fromJson(atsData.get("weaknesses"), new TypeToken<List<String>>() {
-                }.getType()));
+                resume.setWeaknesses(parseStringList(atsData.get("weaknesses")));
             } catch (Exception e) {
                 log.warn("Failed to parse weaknesses, using empty list", e);
                 resume.setWeaknesses(List.of());
             }
 
             try {
-                resume.setRecommendations(gson.fromJson(atsData.get("recommendations"), new TypeToken<List<String>>() {
-                }.getType()));
+                resume.setRecommendations(parseStringList(atsData.get("recommendations")));
             } catch (Exception e) {
                 log.warn("Failed to parse recommendations, using empty list", e);
                 resume.setRecommendations(List.of());
             }
 
             try {
-                resume.setImprovedBulletPoints(
-                        gson.fromJson(atsData.get("improvedBulletPoints"), new TypeToken<List<String>>() {
-                        }.getType()));
+                resume.setImprovedBulletPoints(parseStringList(atsData.get("improvedBulletPoints")));
             } catch (Exception e) {
                 log.warn("Failed to parse improved bullet points, using empty list", e);
                 resume.setImprovedBulletPoints(List.of());
             }
 
             try {
-                resume.setAtsKeywords(gson.fromJson(atsData.get("atsKeywords"), new TypeToken<List<String>>() {
-                }.getType()));
+                resume.setAtsKeywords(parseStringList(atsData.get("atsKeywords")));
             } catch (Exception e) {
                 log.warn("Failed to parse ATS keywords, using empty list", e);
                 resume.setAtsKeywords(List.of());
@@ -236,6 +229,72 @@ public class ResumeService {
         }
 
         return cleaned.trim();
+    }
+
+    /**
+     * Parse JSON element to List<String>, handling both string arrays and object
+     * arrays
+     */
+    private List<String> parseStringList(com.google.gson.JsonElement jsonElement) {
+        if (jsonElement == null || jsonElement.isJsonNull()) {
+            return List.of();
+        }
+
+        try {
+            if (!jsonElement.isJsonArray()) {
+                return List.of();
+            }
+
+            com.google.gson.JsonArray jsonArray = jsonElement.getAsJsonArray();
+            List<String> result = new java.util.ArrayList<>();
+
+            for (int i = 0; i < jsonArray.size(); i++) {
+                if (jsonArray.get(i).isJsonPrimitive()) {
+                    // It's a string - add directly
+                    result.add(jsonArray.get(i).getAsString());
+                } else if (jsonArray.get(i).isJsonObject()) {
+                    // It's an object - try to extract a string value
+                    var obj = jsonArray.get(i).getAsJsonObject();
+                    String value = null;
+
+                    // Try common field names
+                    if (obj.has("name")) {
+                        value = obj.get("name").getAsString();
+                    } else if (obj.has("value")) {
+                        value = obj.get("value").getAsString();
+                    } else if (obj.has("skill")) {
+                        value = obj.get("skill").getAsString();
+                    } else if (obj.has("achievement")) {
+                        value = obj.get("achievement").getAsString();
+                    } else if (obj.has("weakness")) {
+                        value = obj.get("weakness").getAsString();
+                    } else if (obj.has("recommendation")) {
+                        value = obj.get("recommendation").getAsString();
+                    } else if (obj.has("keyword")) {
+                        value = obj.get("keyword").getAsString();
+                    } else if (obj.has("description")) {
+                        value = obj.get("description").getAsString();
+                    } else {
+                        // If no known field, take the first string value found
+                        for (String key : obj.keySet()) {
+                            if (obj.get(key).isJsonPrimitive()) {
+                                value = obj.get(key).getAsString();
+                                break;
+                            }
+                        }
+                    }
+
+                    if (value != null) {
+                        result.add(value);
+                    }
+                }
+            }
+
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to parse string list from JSON element", e);
+            return List.of();
+        }
     }
 
     /**
