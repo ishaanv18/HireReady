@@ -32,9 +32,12 @@ public class InterviewScheduleService {
     public List<String> suggestCompanies(String query) {
         try {
             String response = aiService.suggestCompanies(query);
-            String cleanedResponse = cleanJsonResponse(response);
-            return gson.fromJson(cleanedResponse, new TypeToken<List<String>>() {
-            }.getType());
+            List<String> suggestions = parseStringList(response);
+            // Return default suggestions if parsing failed or empty
+            if (suggestions.isEmpty()) {
+                return List.of("Google", "Microsoft", "Amazon", "Apple", "Meta");
+            }
+            return suggestions;
         } catch (Exception e) {
             log.error("Failed to get company suggestions", e);
             // Return default suggestions
@@ -48,9 +51,13 @@ public class InterviewScheduleService {
     public List<String> suggestRoles(String query, String company) {
         try {
             String response = aiService.suggestRoles(query, company);
-            String cleanedResponse = cleanJsonResponse(response);
-            return gson.fromJson(cleanedResponse, new TypeToken<List<String>>() {
-            }.getType());
+            List<String> suggestions = parseStringList(response);
+            // Return default suggestions if parsing failed or empty
+            if (suggestions.isEmpty()) {
+                return List.of("Software Engineer", "Data Scientist", "Product Manager", "DevOps Engineer",
+                        "QA Engineer");
+            }
+            return suggestions;
         } catch (Exception e) {
             log.error("Failed to get role suggestions", e);
             return List.of("Software Engineer", "Data Scientist", "Product Manager", "DevOps Engineer", "QA Engineer");
@@ -63,9 +70,12 @@ public class InterviewScheduleService {
     public List<String> suggestPositions(String role, String company) {
         try {
             String response = aiService.suggestPositions(role, company);
-            String cleanedResponse = cleanJsonResponse(response);
-            return gson.fromJson(cleanedResponse, new TypeToken<List<String>>() {
-            }.getType());
+            List<String> suggestions = parseStringList(response);
+            // Return default suggestions if parsing failed or empty
+            if (suggestions.isEmpty()) {
+                return List.of("Junior " + role, "Mid-Level " + role, "Senior " + role, "Lead " + role);
+            }
+            return suggestions;
         } catch (Exception e) {
             log.error("Failed to get position suggestions", e);
             return List.of("Junior " + role, "Mid-Level " + role, "Senior " + role, "Lead " + role);
@@ -152,6 +162,62 @@ public class InterviewScheduleService {
             cleaned = cleaned.substring(0, cleaned.length() - 3);
         }
         return cleaned.trim();
+    }
+
+    /**
+     * Parse AI response to List<String>, handling both string arrays and object
+     * arrays
+     */
+    private List<String> parseStringList(String response) {
+        try {
+            String cleanedResponse = cleanJsonResponse(response);
+
+            // Try parsing as JsonArray first to handle both cases
+            JsonArray jsonArray = gson.fromJson(cleanedResponse, JsonArray.class);
+            List<String> result = new java.util.ArrayList<>();
+
+            for (int i = 0; i < jsonArray.size(); i++) {
+                if (jsonArray.get(i).isJsonPrimitive()) {
+                    // It's a string - add directly
+                    result.add(jsonArray.get(i).getAsString());
+                } else if (jsonArray.get(i).isJsonObject()) {
+                    // It's an object - try to extract a string value
+                    // Common patterns: {"name": "..."}, {"value": "..."}, {"company": "..."}
+                    var obj = jsonArray.get(i).getAsJsonObject();
+                    String value = null;
+
+                    // Try common field names
+                    if (obj.has("name")) {
+                        value = obj.get("name").getAsString();
+                    } else if (obj.has("value")) {
+                        value = obj.get("value").getAsString();
+                    } else if (obj.has("company")) {
+                        value = obj.get("company").getAsString();
+                    } else if (obj.has("role")) {
+                        value = obj.get("role").getAsString();
+                    } else if (obj.has("position")) {
+                        value = obj.get("position").getAsString();
+                    } else {
+                        // If no known field, take the first string value found
+                        for (String key : obj.keySet()) {
+                            if (obj.get(key).isJsonPrimitive()) {
+                                value = obj.get(key).getAsString();
+                                break;
+                            }
+                        }
+                    }
+
+                    if (value != null) {
+                        result.add(value);
+                    }
+                }
+            }
+
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to parse AI response as string list: {}", response, e);
+            return new java.util.ArrayList<>();
+        }
     }
 
     /**
