@@ -44,20 +44,20 @@ public class AIService {
     }
 
     /**
-     * Generate AI response with automatic fallback from Gemini to Groq
+     * Generate AI response with automatic fallback from Groq to Gemini
      */
     public String generateResponse(String prompt) {
         try {
-            log.info("Attempting to generate response using Gemini API");
-            return callGeminiAPI(prompt);
+            log.info("Attempting to generate response using Groq API");
+            return callGroqAPI(prompt);
         } catch (Exception e) {
-            log.warn("Gemini API failed, falling back to Groq: {}", e.getMessage());
+            log.warn("Groq API failed, falling back to Gemini: {}", e.getMessage());
             try {
-                log.info("Attempting to generate response using Groq API");
-                return callGroqAPI(prompt);
-            } catch (Exception groqException) {
-                log.error("Both Gemini and Groq APIs failed", groqException);
-                throw new AIServiceException("All AI services are currently unavailable", groqException);
+                log.info("Attempting to generate response using Gemini API");
+                return callGeminiAPI(prompt);
+            } catch (Exception geminiException) {
+                log.error("Both Groq and Gemini APIs failed", geminiException);
+                throw new AIServiceException("All AI services are currently unavailable", geminiException);
             }
         }
     }
@@ -120,7 +120,7 @@ public class AIService {
 
         requestBody.add("messages", messages);
         requestBody.addProperty("temperature", 0.7);
-        requestBody.addProperty("max_tokens", 2000);
+        requestBody.addProperty("max_tokens", 4000); // Increased from 2000 to 4000
 
         RequestBody body = RequestBody.create(
                 requestBody.toString(),
@@ -135,6 +135,8 @@ public class AIService {
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "No error body";
+                log.error("Groq API request failed: {} - {} - {}", response.code(), response.message(), errorBody);
                 throw new IOException("Groq API request failed: " + response.code() + " - " + response.message());
             }
 
@@ -152,6 +154,9 @@ public class AIService {
             }
 
             throw new IOException("Unexpected Groq API response format");
+        } catch (IOException e) {
+            log.error("IOException in Groq API call: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
